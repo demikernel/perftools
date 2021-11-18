@@ -6,16 +6,6 @@ mod tests;
 
 use std::{cell::RefCell, io, rc::Rc};
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "use-quanta")] {
-        use core::time::Duration;
-        use quanta::Instant;
-    } else {
-        use instant::Instant;
-        use std::time::Duration;
-    }
-}
-
 #[cfg(feature = "auto-calibrate")]
 const SAMPLE_SIZE: usize = 16641;
 
@@ -93,7 +83,7 @@ struct Scope {
     num_calls: usize,
 
     /// In total, how much time has been spent in this scope?
-    duration_sum: Duration,
+    duration_sum: u64,
 }
 
 impl Scope {
@@ -103,7 +93,7 @@ impl Scope {
             pred,
             succs: Vec::new(),
             num_calls: 0,
-            duration_sum: Duration::new(0, 0),
+            duration_sum: 0,
         }
     }
 
@@ -116,18 +106,17 @@ impl Scope {
 
     /// Leave this scope. Called automatically by the `Guard` instance.
     #[inline]
-    fn leave(&mut self, duration: Duration) {
+    fn leave(&mut self, duration: u64) {
         self.num_calls += 1;
 
         // Even though this is extremely unlikely, let's not panic on overflow.
-        let duration_sum = self.duration_sum.checked_add(duration);
-        self.duration_sum = duration_sum.unwrap_or(Duration::from_millis(0));
+        self.duration_sum = self.duration_sum + duration;
     }
 
     fn write_recursive<W: io::Write>(
         &self,
         out: &mut W,
-        total_duration: Duration,
+        total_duration: u64,
         depth: usize,
         max_depth: Option<usize>,
     ) -> io::Result<()> {
@@ -137,11 +126,11 @@ impl Scope {
             }
         }
 
-        let mega = 1_000_000.0;
-        let total_duration_secs = total_duration.as_secs_f64();
-        let duration_sum_secs = self.duration_sum.as_secs_f64();
+        let mega: f64 = 1_000_000.0;
+        let total_duration_secs = (total_duration ) as f64;
+        let duration_sum_secs = (self.duration_sum  ) as f64;
         let pred_sum_secs = self.pred.clone().map_or(total_duration_secs, |pred| {
-            pred.borrow().duration_sum.as_secs_f64()
+            (pred.borrow().duration_sum ) as f64
         });
         let percent = duration_sum_secs / pred_sum_secs * 100.0;
 
@@ -152,7 +141,7 @@ impl Scope {
         }
         writeln!(
             out,
-            "{: <40} {: >6.2}%, {: >8.4} us avg",
+            "{: <40} {: >6.2}%, {: >18.4} cycles avg",
             format!(" {}  {}", markers, self.name),
             percent,
             duration_sum_secs * mega / (self.num_calls as f64),
@@ -174,14 +163,14 @@ impl Scope {
 
 /// A guard that is created when entering a scope and dropped when leaving it.
 pub struct Guard {
-    enter_time: Instant,
+    enter_time: u64,
 }
 
 impl Guard {
     #[inline]
     fn enter() -> Self {
         Self {
-            enter_time: Instant::now(),
+            enter_time: unsafe { x86::time::rdtscp() },
         }
     }
 }
@@ -189,14 +178,8 @@ impl Guard {
 impl Drop for Guard {
     #[inline]
     fn drop(&mut self) {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "use-quanta")] {
-                let now = Instant::now();
-                let duration = now.duration_since(self.enter_time);
-            } else {
-                let duration = self.enter_time.elapsed();
-            }
-        }
+        let now: u64 = unsafe { x86::time::rdtscp() };
+        let duration: u64 = now - self.enter_time;
         PROFILER.with(|p| p.borrow_mut().leave(duration));
     }
 }
@@ -215,7 +198,7 @@ pub struct Profiler {
     roots: Vec<Rc<RefCell<Scope>>>,
     current: Option<Rc<RefCell<Scope>>>,
     #[cfg(feature = "auto-calibrate")]
-    clock_drift: Duration,
+    clock_drift: u64,
 }
 
 impl Profiler {
@@ -295,7 +278,7 @@ impl Profiler {
 
     /// Leave the current scope.
     #[inline]
-    fn leave(&mut self, duration: Duration) {
+    fn leave(&mut self, duration: u64) {
         self.current = if let Some(current) = self.current.as_ref() {
             cfg_if::cfg_if! {
                 if #[cfg(feature = "auto-calibrate")] {
@@ -332,26 +315,16 @@ impl Profiler {
     }
 
     #[cfg(feature = "auto-calibrate")]
-    fn clock_drift(nsamples: usize) -> Duration {
-        let mut total = Duration::new(0, 0);
+    fn clock_drift(nsamples: usize) -> u64 {
+        let mut total = 0;
 
         for _ in 0..nsamples {
-            let now = Instant::now();
-            cfg_if::cfg_if! {
-                if #[cfg(feature = "use-quanta")] {
-                    let duration = Instant::now() - now;
-                } else {
-                    let duration = now.elapsed();
-                }
-            }
+            let now: u64 = x86::time::rdtscp();
+            let duration: u64 = x86::time::rdtscp() - now;
 
-            let d = total.checked_add(duration);
-            total = d.unwrap_or(Duration::from_millis(0));
+            let d = total + duration;
         }
 
-        let t = total.as_secs_f64();
-        let clock_drift = t / (nsamples as f64);
-
-        Duration::from_secs_f64(clock_drift)
+        total / (nsamples as u64)
     }
 }
