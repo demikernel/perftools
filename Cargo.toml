@@ -12,8 +12,7 @@ readme = "README.md"
 [dependencies]
 cfg-if = "0.1"
 log = "0.4"
-instant = "0.1"
-quanta = "0.9.3"
+x86 = "0.43.0"
 
 [features]
 use-quanta = []
