@@ -126,7 +126,6 @@ impl Scope {
             }
         }
 
-        let mega: f64 = 1_000_000.0;
         let total_duration_secs = (total_duration ) as f64;
         let duration_sum_secs = (self.duration_sum  ) as f64;
         let pred_sum_secs = self.pred.clone().map_or(total_duration_secs, |pred| {
@@ -144,7 +143,7 @@ impl Scope {
             "{: <40} {: >6.2}%, {: >18.4} cycles avg",
             format!(" {}  {}", markers, self.name),
             percent,
-            duration_sum_secs * mega / (self.num_calls as f64),
+            duration_sum_secs / (self.num_calls as f64),
         )?;
 
         // Write children
