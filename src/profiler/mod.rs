@@ -140,7 +140,7 @@ impl Scope {
         }
         writeln!(
             out,
-            "{: <40} {: >6.2}%, {: >18.4} cycles avg",
+            "{: <40} {: >6.2}%, {: >18.4} cycles",
             format!(" {}  {}", markers, self.name),
             percent,
             duration_sum_secs / (self.num_calls as f64),
