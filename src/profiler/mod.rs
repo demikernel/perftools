@@ -126,10 +126,10 @@ impl Scope {
             }
         }
 
-        let total_duration_secs = (total_duration ) as f64;
-        let duration_sum_secs = (self.duration_sum  ) as f64;
+        let total_duration_secs = (total_duration) as f64;
+        let duration_sum_secs = (self.duration_sum) as f64;
         let pred_sum_secs = self.pred.clone().map_or(total_duration_secs, |pred| {
-            (pred.borrow().duration_sum ) as f64
+            (pred.borrow().duration_sum) as f64
         });
         let percent = duration_sum_secs / pred_sum_secs * 100.0;
 
