@@ -126,10 +126,10 @@ impl Scope {
             }
         }
 
-        let total_duration_secs = (total_duration ) as f64;
-        let duration_sum_secs = (self.duration_sum  ) as f64;
+        let total_duration_secs = (total_duration) as f64;
+        let duration_sum_secs = (self.duration_sum) as f64;
         let pred_sum_secs = self.pred.clone().map_or(total_duration_secs, |pred| {
-            (pred.borrow().duration_sum ) as f64
+            (pred.borrow().duration_sum) as f64
         });
         let percent = duration_sum_secs / pred_sum_secs * 100.0;
 
@@ -140,7 +140,7 @@ impl Scope {
         }
         writeln!(
             out,
-            "{: <40} {: >6.2}%, {: >18.4} cycles",
+            "{: <60} {: >6.2}%, {: >18.4} cycles",
             format!(" {}  {}", markers, self.name),
             percent,
             duration_sum_secs / (self.num_calls as f64),
