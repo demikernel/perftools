@@ -5,7 +5,7 @@ This Rust crate provides a collection of performance tracing, profiling and
 analysis tools for rust developers.
 
 
-This project was insipred by many others. Special thanks to the following ones:
+This project was inspired by many others. Special thanks to the following ones:
 
 - [coarse-prof](https://github.com/leod/coarse-prof): a coarse-grained hierarchical profiler for rust
 
