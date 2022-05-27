@@ -10,9 +10,9 @@ keywords = ["performance", "tracing", "profiling", "analysis"]
 readme = "README.md"
 
 [dependencies]
-cfg-if = "0.1"
-log = "0.4"
-x86 = "0.43.0"
+cfg-if = "1.0.0"
+log = "0.4.17"
+x86 = "0.48.0"
 
 [features]
 auto-calibrate = []
