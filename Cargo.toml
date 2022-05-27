@@ -10,7 +10,7 @@ keywords = ["performance", "tracing", "profiling", "analysis"]
 readme = "README.md"
 
 [dependencies]
-cfg-if = "0.1"
+cfg-if = "1.0.0"
 log = "0.4"
 x86 = "0.43.0"
 
