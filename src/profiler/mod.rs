@@ -4,7 +4,11 @@
 #[cfg(test)]
 mod tests;
 
-use std::{cell::RefCell, io, rc::Rc};
+use std::{
+    cell::RefCell,
+    io,
+    rc::Rc,
+};
 
 #[cfg(feature = "auto-calibrate")]
 const SAMPLE_SIZE: usize = 16641;
@@ -128,9 +132,10 @@ impl Scope {
 
         let total_duration_secs = (total_duration) as f64;
         let duration_sum_secs = (self.duration_sum) as f64;
-        let pred_sum_secs = self.pred.clone().map_or(total_duration_secs, |pred| {
-            (pred.borrow().duration_sum) as f64
-        });
+        let pred_sum_secs = self
+            .pred
+            .clone()
+            .map_or(total_duration_secs, |pred| (pred.borrow().duration_sum) as f64);
         let percent = duration_sum_secs / pred_sum_secs * 100.0;
 
         // Write markers.
@@ -241,11 +246,7 @@ impl Profiler {
         } else {
             // We are currently not within any scope. Check if `name` already
             // is a root.
-            let existing_root = self
-                .roots
-                .iter()
-                .find(|root| root.borrow().name == name)
-                .cloned();
+            let existing_root = self.roots.iter().find(|root| root.borrow().name == name).cloned();
 
             existing_root.unwrap_or_else(|| {
                 // Add a new root node.
@@ -299,15 +300,10 @@ impl Profiler {
     }
 
     fn write<W: io::Write>(&self, out: &mut W, max_depth: Option<usize>) -> io::Result<()> {
-        let total_duration = self
-            .roots
-            .iter()
-            .map(|root| root.borrow().duration_sum)
-            .sum();
+        let total_duration = self.roots.iter().map(|root| root.borrow().duration_sum).sum();
 
         for root in self.roots.iter() {
-            root.borrow()
-                .write_recursive(out, total_duration, 0, max_depth)?;
+            root.borrow().write_recursive(out, total_duration, 0, max_depth)?;
         }
 
         out.flush()

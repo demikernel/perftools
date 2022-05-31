@@ -1,8 +1,10 @@
 // Copyright(c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-use crate::profiler;
-use crate::timer;
+use crate::{
+    profiler,
+    timer,
+};
 
 #[test]
 fn test_multiple_roots() {
@@ -63,10 +65,7 @@ fn test_succ_reuse() {
 
         let succ = root.succs[0].borrow();
         assert_eq!(succ.name, "b");
-        assert!(ptr::eq(
-            succ.pred.as_ref().unwrap().as_ref(),
-            p.roots[0].as_ref()
-        ));
+        assert!(ptr::eq(succ.pred.as_ref().unwrap().as_ref(), p.roots[0].as_ref()));
         assert!(succ.succs.is_empty());
         assert_eq!(succ.num_calls, 3);
     });
