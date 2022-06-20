@@ -1,6 +1,6 @@
 [package]
 name = "perftools"
-version = "1.0.4"
+version = "1.0.5"
 edition = "2018"
 authors = ["Pedro Henrique Penna <ppenna@microsoft.com>"]
 description = "Performance Tools for Rust"
