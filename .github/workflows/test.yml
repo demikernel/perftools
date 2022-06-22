@@ -3,6 +3,10 @@
 
 name: Test
 
+concurrency:
+  group: azure-catnap
+  cancel-in-progress: true
+
 on:
   workflow_run:
     workflows: [ Build ]
@@ -259,4 +263,3 @@ jobs:
             git clean -fdx
             git checkout master
             git remote prune origin
-
