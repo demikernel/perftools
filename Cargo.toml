@@ -6,7 +6,6 @@ edition = "2021"
 description = "Performance Tools for Rust"
 readme = "README.md"
 repository = "https://github.com/demikernel/perftools"
-license = "MIT"
 license-file = "LICENSE.txt"
 keywords = ["performance", "tracing", "profiling", "analysis"]
 
