@@ -183,6 +183,46 @@ jobs:
             make all DEBUG=no
 
   #=====================================================================================================================
+  # Build Documentation
+  #=====================================================================================================================
+
+  # Node 0
+  build-doc-demikernel0:
+    name: Node 0 / Build Doc
+    needs: [build-release-demikernel0]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CATNAP_HOSTNAME_A }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORTNUM }}
+          envs: GITHUB_REPOSITORY,GITHUB_SHA
+          script: |
+            cd $GITHUB_REPOSITORY
+            make doc
+
+  # Node 1
+  build-doc-demikernel1:
+    name: Node 1 / Build Doc
+    needs: [build-release-demikernel1]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CATNAP_HOSTNAME_B }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORTNUM }}
+          envs: GITHUB_REPOSITORY,GITHUB_SHA
+          script: |
+            cd $GITHUB_REPOSITORY
+            make doc
+
+  #=====================================================================================================================
   # Cleanup
   #=====================================================================================================================
 
@@ -190,7 +230,7 @@ jobs:
   cleanup-demikernel0:
     name: Node 0 / Cleanup
     if: always()
-    needs: [build-release-demikernel0]
+    needs: [build-doc-demikernel0]
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup
@@ -212,7 +252,7 @@ jobs:
   cleanup-demikernel1:
     name: Node 1 / Cleanup
     if: always()
-    needs: [build-release-demikernel1]
+    needs: [build-doc-demikernel1]
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup
