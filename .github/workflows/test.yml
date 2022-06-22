@@ -97,8 +97,8 @@ jobs:
   #=====================================================================================================================
 
   # Node 0
-  test-demikernel0:
-    name: Node 0 / Run Tests
+  test-debug-demikernel0:
+    name: Node 0 / Test Debug
     needs: [build-debug-demikernel0]
     runs-on: ubuntu-latest
     steps:
@@ -115,9 +115,89 @@ jobs:
             make test DEBUG=yes
 
   # Node 1
-  test-demikernel1:
-    name: Node 1 / Run Tests
+  test-debug-demikernel1:
+    name: Node 1 / Test Debug
     needs: [build-debug-demikernel1]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CATNAP_HOSTNAME_B }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORTNUM }}
+          envs: GITHUB_REPOSITORY
+          script: |
+            cd $GITHUB_REPOSITORY
+            make test DEBUG=yes
+
+  #=====================================================================================================================
+  # Compile Release
+  #=====================================================================================================================
+
+  # Node 0
+  build-release-demikernel0:
+    name: Node 0 / Compile Release
+    needs: [test-debug-demikernel0]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CATNAP_HOSTNAME_A }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORTNUM }}
+          envs: GITHUB_REPOSITORY
+          script: |
+            cd $GITHUB_REPOSITORY
+            make all DEBUG=no
+
+  # Node 1
+  build-release-demikernel1:
+    name: Node 1 / Compile Release
+    needs: [test-debug-demikernel1]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CATNAP_HOSTNAME_B }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORTNUM }}
+          envs: GITHUB_REPOSITORY
+          script: |
+            cd $GITHUB_REPOSITORY
+            make all DEBUG=no
+
+  #=====================================================================================================================
+  # Run Tests
+  #=====================================================================================================================
+
+  # Node 0
+  test-release-demikernel0:
+    name: Node 0 / Test Release
+    needs: [build-release-demikernel0]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CATNAP_HOSTNAME_A }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORTNUM }}
+          envs: GITHUB_REPOSITORY
+          script: |
+            cd $GITHUB_REPOSITORY
+            make test DEBUG=no
+
+  # Node 1
+  test-release-demikernel1:
+    name: Node 1 / Test Release
+    needs: [build-release-demikernel1]
     runs-on: ubuntu-latest
     steps:
       - name: Compile
@@ -140,7 +220,7 @@ jobs:
   cleanup-demikernel0:
     name: Node 0 / Cleanup
     if: always()
-    needs: [test-demikernel0]
+    needs: [test-release-demikernel0]
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup
@@ -162,7 +242,7 @@ jobs:
   cleanup-demikernel1:
     name: Node 1 / Cleanup
     if: always()
-    needs: [test-demikernel1]
+    needs: [test-release-demikernel1]
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup
