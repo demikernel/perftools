@@ -4,11 +4,7 @@
 #[cfg(test)]
 mod tests;
 
-use std::{
-    cell::RefCell,
-    io,
-    rc::Rc,
-};
+use std::{cell::RefCell, io, rc::Rc};
 
 #[cfg(feature = "auto-calibrate")]
 const SAMPLE_SIZE: usize = 16641;
