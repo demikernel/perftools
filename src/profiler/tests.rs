@@ -1,10 +1,7 @@
 // Copyright(c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-use crate::{
-    profiler,
-    timer,
-};
+use crate::{profiler, timer};
 
 #[test]
 fn test_multiple_roots() {
