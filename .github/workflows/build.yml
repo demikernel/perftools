@@ -3,269 +3,102 @@
 
 name: Build
 
-concurrency:
-  group: azure-catnap
-  cancel-in-progress: true
-
 on:
-  push:
-    branches:
-      - bugfix-*
-      - enhancement-*
-      - feature-*
-      - workaround-*
-      - dev
-      - unstable
-      - master
+  workflow_call:
+    secrets:
+      host:
+        required: true
+      port:
+        required: true
+      key:
+        required: true
+      username:
+        required: true
+
+env:
+  GITHUB_REPOSITORY: $GITHUB_REPOSITORY
 
 jobs:
 
   #=====================================================================================================================
-  # Setup
+  # Build Doc
   #=====================================================================================================================
 
-  # Node 0
-  setup-demikernel0:
-    name: Node 0 / Setup
+  build-doc:
+    name: Check Formatting
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch Changes
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_A }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            git checkout master
-            git pull
-            git checkout --detach $GITHUB_SHA
-
-  # Node 1
-  setup-demikernel1:
-    name: Node 1 / Setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fetch Changes
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_B }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            git checkout master
-            git pull
-            git checkout --detach $GITHUB_SHA
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make doc
 
   #=====================================================================================================================
   # Check Formatting
   #=====================================================================================================================
 
-  # Node 0
-  check-fmt-demikernel0:
-    name: Node 0 / Check Formatting
-    needs: [setup-demikernel0]
+  check-fmt:
+    name: Check Formatting
+    needs: [build-doc]
     runs-on: ubuntu-latest
     steps:
-      - name: Check Formatting
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_A }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make check-fmt
-
-  # Node 1
-  check-fmt-demikernel1:
-    name: Node 1 / Check Formatting
-    needs: [setup-demikernel1]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check Formatting
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_B }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make check-fmt
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make check-fmt
 
   #=====================================================================================================================
-  # Compile Debug
+  # Build Debug
   #=====================================================================================================================
 
-  # Node 0
-  build-debug-demikernel0:
-    name: Node 0 / Compile Debug
-    needs: [check-fmt-demikernel0]
+  build-debug:
+    name: Compile Debug
+    needs: [check-fmt]
     runs-on: ubuntu-latest
     steps:
-      - name: Compile
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_A }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make all DEBUG=yes
-
-  # Node 1
-  build-debug-demikernel1:
-    name: Node 1 / Compile Debug
-    needs: [check-fmt-demikernel1]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Compile
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_B }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make all DEBUG=yes
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make all DEBUG=yes
 
   #=====================================================================================================================
-  # Compile Release
+  # Build Release
   #=====================================================================================================================
 
-  # Node 0
-  build-release-demikernel0:
-    name: Node 0 / Compile Release
-    needs: [build-debug-demikernel0]
+  build-release:
+    name: Compile Release
+    needs: [build-debug]
     runs-on: ubuntu-latest
     steps:
-      - name: Compile
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_A }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make all DEBUG=no
-
-  # Node 1
-  build-release-demikernel1:
-    name: Node 1 / Compile Release
-    needs: [build-debug-demikernel1]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Compile
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_B }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make all DEBUG=no
-
-  #=====================================================================================================================
-  # Build Documentation
-  #=====================================================================================================================
-
-  # Node 0
-  build-doc-demikernel0:
-    name: Node 0 / Build Doc
-    needs: [build-release-demikernel0]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Compile
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_A }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make doc
-
-  # Node 1
-  build-doc-demikernel1:
-    name: Node 1 / Build Doc
-    needs: [build-release-demikernel1]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Compile
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_B }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make doc
-
-  #=====================================================================================================================
-  # Cleanup
-  #=====================================================================================================================
-
-  # Node 0
-  cleanup-demikernel0:
-    name: Node 0 / Cleanup
-    if: always()
-    needs: [build-doc-demikernel0]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cleanup
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_A }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make clean
-            git clean -fdx
-            git checkout master
-            git remote prune origin
-
-  # Node 1
-  cleanup-demikernel1:
-    name: Node 1 / Cleanup
-    if: always()
-    needs: [build-doc-demikernel1]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cleanup
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CATNAP_HOSTNAME_B }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORTNUM }}
-          envs: GITHUB_REPOSITORY,GITHUB_SHA
-          script: |
-            cd $GITHUB_REPOSITORY
-            make clean
-            git clean -fdx
-            git checkout master
-            git remote prune origin
+    - name: Compile
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: ${{ secrets.username }}
+        key: ${{ secrets.key }}
+        port: ${{ secrets.port }}
+        envs: GITHUB_REPOSITORY
+        script: |
+          cd $GITHUB_REPOSITORY
+          make all DEBUG=no
