@@ -169,16 +169,15 @@ pub struct Guard {
 impl Guard {
     #[inline]
     fn enter() -> Self {
-        Self {
-            enter_time: unsafe { x86::time::rdtscp() },
-        }
+        let (now, _): (u64, u32) = unsafe { x86::time::rdtscp() };
+        Self { enter_time: now }
     }
 }
 
 impl Drop for Guard {
     #[inline]
     fn drop(&mut self) {
-        let now: u64 = unsafe { x86::time::rdtscp() };
+        let (now, _): (u64, u32) = unsafe { x86::time::rdtscp() };
         let duration: u64 = now - self.enter_time;
         PROFILER.with(|p| p.borrow_mut().leave(duration));
     }
