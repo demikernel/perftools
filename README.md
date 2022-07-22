@@ -1,5 +1,4 @@
-Performance Tools for Rust
-===========================
+# Performance Tools for Rust
 
 This Rust crate provides a collection of performance tracing, profiling and
 analysis tools for rust developers.
@@ -8,15 +7,13 @@ This project was inspired by many others. Special thanks to the following ones:
 
 - [coarse-prof](https://github.com/leod/coarse-prof): a coarse-grained hierarchical profiler for rust
 
-Code of Conduct
----------------
+## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/)
 or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-Usage Statement
---------------
+## Usage Statement
 
 This project is a prototype. As such, we provide no guarantees that it will
 work and you are assuming any risks with using the code. We welcome comments
